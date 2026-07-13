@@ -23,7 +23,10 @@ export function useSession() {
     queryFn: async () => {
       const { data, response } = await apiClient.GET("/api/me/");
       if (response.status === 401 || response.status === 403) return null;
-      return data ?? null;
+      // MeViewSet uses a `list` action so drf-spectacular generates an array
+      // type, but the endpoint actually returns a single UserMe object.
+      // TODO: change MeViewSet to a plain APIView and regenerate schema.
+      return (data as unknown as UserMe) ?? null;
     },
     staleTime: 5 * 60 * 1000,
     retry: false,

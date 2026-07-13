@@ -45,7 +45,7 @@ export function LoginView() {
 
   return (
     <Box sx={{ maxWidth: 400, mx: "auto", py: 4 }}>
-      <Stack spacing={1} alignItems="center" sx={{ mb: 3 }}>
+      <Stack spacing={1} sx={{ mb: 3, alignItems: "center" }}>
         <Wordmark />
         <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
           Welcome back
@@ -93,7 +93,7 @@ export function LoginView() {
 
       <Typography sx={{ mt: 3, textAlign: "center" }} color="text.secondary">
         New here?{" "}
-        <Link component={NextLink} href={ROUTES.signup} fontWeight={700}>
+        <Link component={NextLink} href={ROUTES.signup} sx={{ fontWeight: 700 }}>
           Create an account
         </Link>
       </Typography>

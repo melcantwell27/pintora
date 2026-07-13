@@ -76,7 +76,7 @@ export function ProfileView() {
 
   return (
     <Box sx={{ py: 4, maxWidth: 440, mx: "auto" }}>
-      <Stack spacing={2} alignItems="center">
+      <Stack spacing={2} sx={{ alignItems: "center" }}>
         <Avatar
           src={user.avatar ?? undefined}
           sx={{
