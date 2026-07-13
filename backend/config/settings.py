@@ -78,16 +78,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "pintora"),
-        "USER": os.environ.get("POSTGRES_USER", "pintora"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "pintora"),
-        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+_database_url = os.environ.get("DATABASE_URL")
+if _database_url:
+    import dj_database_url
+    DATABASES = {"default": dj_database_url.config(conn_max_age=600, ssl_require=True)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB", "pintora"),
+            "USER": os.environ.get("POSTGRES_USER", "pintora"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "pintora"),
+            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
