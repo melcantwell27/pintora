@@ -28,7 +28,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
             {recipe.title}
           </Typography>
 
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.75 }}>
+          <Stack direction="row" spacing={1} sx={{ mb: 1.75, alignItems: "center" }}>
             <Avatar
               sx={{
                 width: 26,
