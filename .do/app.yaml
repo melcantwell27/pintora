@@ -1,89 +1,114 @@
+# DigitalOcean App Platform spec — mirrors the live app "pintora".
+#
+# NOTE: the live app was created via the DO console, so this file is NOT
+# auto-applied on push. It is the source-of-truth reference for the app's
+# config. To apply changes made here:
+#   doctl apps update <app-id> --spec .do/app.yaml
+# or use the API / console. Keep this file in sync with the live spec.
+#
+# Routing model: single domain, path-routed (see ingress at the bottom).
+#   /          → pintora-frontend (Next.js)
+#   /api       → pintora-backend  (Django)
+#   /_allauth  → pintora-backend  (allauth headless auth API)
+# preserve_path_prefix keeps the full path when forwarding, since Django's
+# urls.py includes the /api and /_allauth prefixes itself.
+
 name: pintora
 region: nyc
 
 services:
-  - name: api
+  - name: pintora-backend
     source_dir: backend
     github:
       repo: melcantwell27/pintora
       branch: main
       deploy_on_push: true
     environment_slug: python
-    instance_size_slug: basic-xxs
+    instance_size_slug: apps-s-1vcpu-0.5gb
     instance_count: 1
-    http_port: 8000
+    http_port: 8080
     build_command: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    run_command: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --log-file -
+    # migrate runs on every deploy so the DB schema always matches the code.
+    run_command: python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --log-file -
     health_check:
       http_path: /api/health/
-      initial_delay_seconds: 10
-      period_seconds: 30
-      failure_threshold: 3
     envs:
       - key: DJANGO_DEBUG
         value: "False"
+        scope: RUN_TIME
+      # Set in the console/API as an encrypted secret — never commit the value.
+      # Generate: python -c "import secrets; print(secrets.token_urlsafe(50))"
       - key: DJANGO_SECRET_KEY
         scope: RUN_TIME
         type: SECRET
-      - key: DJANGO_ALLOWED_HOSTS
-        value: "${api.HOSTNAME}"
-        scope: RUN_AND_BUILD_TIME
-      - key: CORS_ALLOWED_ORIGINS
-        value: "https://${web.HOSTNAME}"
-        scope: RUN_AND_BUILD_TIME
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://${api.HOSTNAME},https://${web.HOSTNAME}"
-        scope: RUN_AND_BUILD_TIME
+        value: "https://pintora-l5spv.ondigitalocean.app"
+        scope: RUN_TIME
+      # allauth email links / OAuth error redirects point back to the SPA.
       - key: FRONTEND_ORIGIN
-        value: "https://${web.HOSTNAME}"
-        scope: RUN_AND_BUILD_TIME
-      - key: POSTGRES_DB
-        value: "${db.DATABASE}"
-        scope: RUN_AND_BUILD_TIME
-      - key: POSTGRES_USER
-        value: "${db.USERNAME}"
-        scope: RUN_AND_BUILD_TIME
-      - key: POSTGRES_PASSWORD
-        value: "${db.PASSWORD}"
-        scope: RUN_AND_BUILD_TIME
-      - key: POSTGRES_HOST
-        value: "${db.HOSTNAME}"
-        scope: RUN_AND_BUILD_TIME
-      - key: POSTGRES_PORT
-        value: "${db.PORT}"
-        scope: RUN_AND_BUILD_TIME
+        value: "https://pintora-l5spv.ondigitalocean.app"
+        scope: RUN_TIME
+      # From Google Cloud Console → Auth Platform → Clients. Authorized
+      # redirect URI (prod):
+      #   https://pintora-l5spv.ondigitalocean.app/api/auth/google/login/callback/
       - key: GOOGLE_OAUTH_CLIENT_ID
         scope: RUN_TIME
         type: SECRET
       - key: GOOGLE_OAUTH_CLIENT_SECRET
         scope: RUN_TIME
         type: SECRET
+      # Let gunicorn trust X-Forwarded-* from DO's load balancer so Django
+      # (SECURE_PROXY_SSL_HEADER) knows requests arrived over https.
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+        scope: RUN_TIME
+      # DATABASE_URL is injected automatically by the attached dev database;
+      # settings.py prefers it over the POSTGRES_* fallbacks.
 
-  - name: web
+  - name: pintora-frontend
     source_dir: frontend
     github:
       repo: melcantwell27/pintora
       branch: main
       deploy_on_push: true
     environment_slug: node-js
-    instance_size_slug: basic-xxs
+    instance_size_slug: apps-s-1vcpu-0.5gb
     instance_count: 1
     http_port: 3000
     build_command: npm ci && npm run build
     run_command: npm start
     health_check:
       http_path: /
-      initial_delay_seconds: 10
-      period_seconds: 30
-      failure_threshold: 3
     envs:
+      # Empty on purpose: the SPA and API share one domain, so the frontend
+      # calls the API with relative URLs (baked in at build time).
       - key: NEXT_PUBLIC_API_BASE_URL
-        value: "https://${api.HOSTNAME}"
+        value: ""
         scope: BUILD_TIME
 
 databases:
-  - name: db
+  # Dev-tier database created by the console wizard (name is auto-generated).
+  # Upgrade to a managed cluster (production: true) before real launch.
+  - name: dev-db-637500
     engine: PG
-    version: "16"
-    production: false
-    cluster_name: pintora-db
+    version: "17"
+
+ingress:
+  rules:
+    - match:
+        path:
+          prefix: /api
+      component:
+        name: pintora-backend
+        preserve_path_prefix: true
+    - match:
+        path:
+          prefix: /_allauth
+      component:
+        name: pintora-backend
+        preserve_path_prefix: true
+    - match:
+        path:
+          prefix: /
+      component:
+        name: pintora-frontend

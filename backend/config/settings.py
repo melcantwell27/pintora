@@ -187,15 +187,22 @@ CSRF_TRUSTED_ORIGINS = [
     if origin.strip()
 ]
 
-# Cookie settings — dev uses Lax (same-site localhost), production uses None+Secure
-# because the SPA and API are on different DigitalOcean subdomains.
+# Cookie settings — SameSite=Lax works everywhere: locally the SPA (:3001) and
+# API (:8001) are same-site (both localhost; ports don't matter for SameSite),
+# and in production both share one domain via App Platform path routing.
 # CSRF_COOKIE_HTTPONLY must stay False so JS can read the token for X-CSRFToken.
-_cross_site = not DEBUG
-SESSION_COOKIE_SAMESITE = "None" if _cross_site else "Lax"
-SESSION_COOKIE_SECURE = _cross_site
-CSRF_COOKIE_SAMESITE = "None" if _cross_site else "Lax"
-CSRF_COOKIE_SECURE = _cross_site
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = False
+
+if not DEBUG:
+    # DO App Platform terminates TLS at its load balancer, so Django must trust
+    # X-Forwarded-Proto to know requests are https — otherwise allauth builds
+    # http:// OAuth callback URLs and secure-cookie/CSRF checks misbehave.
+    # Requires gunicorn to forward the header: FORWARDED_ALLOW_IPS="*" env var.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
