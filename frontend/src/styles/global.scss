@@ -1,0 +1,60 @@
+// Global, non-MUI styles: base resets, scrollbar styling, and overrides for
+// third-party widget CSS (e.g. a date range picker). Colors/fonts come from
+// the MUI theme (src/styles/theme.ts) — keep component styling out of here.
+
+// --- Base resets --------------------------------------------------------
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+// --- Scrollbars ---------------------------------------------------------
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(46, 27, 20, 0.28) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(46, 27, 20, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 27, 20, 0.45);
+  background-clip: padding-box;
+}
+
+// --- Third-party overrides ----------------------------------------------
+// Place styling overrides for external libraries here (e.g. date range
+// picker, carousels) so they don't leak into component files.

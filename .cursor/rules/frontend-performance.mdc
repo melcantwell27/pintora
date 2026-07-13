@@ -1,0 +1,12 @@
+---
+description: Pintora frontend performance defaults for Next.js + MUI
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend performance
+
+- Import MUI components from their direct paths (`@mui/material/Button`), not barrel imports.
+- Use `next/image` for all recipe photos.
+- Paginate feeds; never fetch unbounded recipe lists.
+- Lazy-load heavy screens (create recipe, profile edit) with `next/dynamic`.

@@ -1,0 +1,610 @@
+openapi: 3.0.3
+info:
+  title: Pintora API
+  version: 1.0.0
+  description: Share and discover Ninja Creami recipes.
+paths:
+  /api/me/:
+    get:
+      operationId: me_list
+      description: Endpoints for the currently authenticated user.
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserMe'
+          description: ''
+  /api/me/profile/:
+    patch:
+      operationId: me_profile_partial_update
+      description: Endpoints for the currently authenticated user.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserMe'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserMe'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserMe'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+          description: ''
+  /api/recipes/:
+    get:
+      operationId: recipes_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - recipes
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRecipeListList'
+          description: ''
+    post:
+      operationId: recipes_create
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+  /api/recipes/{slug}/:
+    get:
+      operationId: recipes_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - recipes
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeDetail'
+          description: ''
+    put:
+      operationId: recipes_update
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+    patch:
+      operationId: recipes_partial_update
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRecipeWrite'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+    delete:
+      operationId: recipes_destroy
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - recipes
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/{username}/:
+    get:
+      operationId: users_retrieve
+      description: Public user profiles.
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        required: true
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+          description: ''
+components:
+  schemas:
+    BlankEnum:
+      enum:
+      - ''
+    PaginatedRecipeListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeList'
+    PatchedRecipeWrite:
+      type: object
+      description: Input DTO for create/update — nested ingredients on write.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        instructions:
+          type: string
+        program:
+          oneOf:
+          - $ref: '#/components/schemas/ProgramEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientWrite'
+        tag_slugs:
+          type: array
+          items:
+            type: string
+        is_published:
+          type: boolean
+    PatchedUserMe:
+      type: object
+      description: Current authenticated user — used by the FE for global session
+        context.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        bio:
+          type: string
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+    ProgramEnum:
+      enum:
+      - ice_cream
+      - lite_ice_cream
+      - sorbet
+      - gelato
+      - smoothie_bowl
+      - milkshake
+      - mix_in
+      - frozen_yogurt
+      - italian_ice
+      type: string
+      description: |-
+        * `ice_cream` - Ice Cream
+        * `lite_ice_cream` - Lite Ice Cream
+        * `sorbet` - Sorbet
+        * `gelato` - Gelato
+        * `smoothie_bowl` - Smoothie Bowl
+        * `milkshake` - Milkshake
+        * `mix_in` - Mix-in
+        * `frozen_yogurt` - Frozen Yogurt
+        * `italian_ice` - Italian Ice
+    RecipeDetail:
+      type: object
+      description: Full DTO for the recipe detail page.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserPublic'
+          readOnly: true
+        program:
+          allOf:
+          - $ref: '#/components/schemas/ProgramEnum'
+          readOnly: true
+        program_display:
+          type: string
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        instructions:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredient'
+          readOnly: true
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeImage'
+          readOnly: true
+        is_published:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - images
+      - ingredients
+      - instructions
+      - program
+      - program_display
+      - slug
+      - tags
+      - title
+      - updated_at
+    RecipeImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        sort_order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - id
+      - image
+    RecipeIngredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        section:
+          $ref: '#/components/schemas/SectionEnum'
+        name:
+          type: string
+          maxLength: 200
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        unit:
+          type: string
+          maxLength: 50
+        prep_note:
+          type: string
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - id
+      - name
+    RecipeIngredientWrite:
+      type: object
+      properties:
+        section:
+          $ref: '#/components/schemas/SectionEnum'
+        name:
+          type: string
+          maxLength: 200
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        unit:
+          type: string
+          maxLength: 50
+        prep_note:
+          type: string
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - name
+    RecipeList:
+      type: object
+      description: Lightweight DTO for feeds and search results.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserPublic'
+          readOnly: true
+        program:
+          allOf:
+          - $ref: '#/components/schemas/ProgramEnum'
+          readOnly: true
+        program_display:
+          type: string
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - program
+      - program_display
+      - slug
+      - tags
+      - title
+    RecipeWrite:
+      type: object
+      description: Input DTO for create/update — nested ingredients on write.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        instructions:
+          type: string
+        program:
+          oneOf:
+          - $ref: '#/components/schemas/ProgramEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientWrite'
+        tag_slugs:
+          type: array
+          items:
+            type: string
+        is_published:
+          type: boolean
+      required:
+      - ingredients
+      - instructions
+      - title
+    SectionEnum:
+      enum:
+      - base
+      - mix_in
+      type: string
+      description: |-
+        * `base` - Base
+        * `mix_in` - Mix-in
+    Tag:
+      type: object
+      properties:
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        label:
+          type: string
+          readOnly: true
+      required:
+      - label
+      - slug
+    UserMe:
+      type: object
+      description: Current authenticated user — used by the FE for global session
+        context.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        bio:
+          type: string
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - email
+      - id
+      - username
+    UserPublic:
+      type: object
+      description: Read-only public profile shown on recipe cards and author pages.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        bio:
+          type: string
+          readOnly: true
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+      required:
+      - avatar
+      - bio
+      - id
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
