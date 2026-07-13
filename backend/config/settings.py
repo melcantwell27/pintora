@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -102,6 +103,11 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -171,13 +177,15 @@ CSRF_TRUSTED_ORIGINS = [
     if origin.strip()
 ]
 
-# Cookies for the cross-origin (same-site: both localhost) SPA in dev.
-# CSRF cookie must be readable by JS so the app can send X-CSRFToken.
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
+# Cookie settings — dev uses Lax (same-site localhost), production uses None+Secure
+# because the SPA and API are on different DigitalOcean subdomains.
+# CSRF_COOKIE_HTTPONLY must stay False so JS can read the token for X-CSRFToken.
+_cross_site = not DEBUG
+SESSION_COOKIE_SAMESITE = "None" if _cross_site else "Lax"
+SESSION_COOKIE_SECURE = _cross_site
+CSRF_COOKIE_SAMESITE = "None" if _cross_site else "Lax"
+CSRF_COOKIE_SECURE = _cross_site
 CSRF_COOKIE_HTTPONLY = False
-# Production note: if the SPA and API live on different sites, switch the
-# SameSite values to "None" and enable Secure cookies over HTTPS.
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
