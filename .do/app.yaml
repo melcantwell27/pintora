@@ -62,8 +62,12 @@ services:
       - key: FORWARDED_ALLOW_IPS
         value: "*"
         scope: RUN_TIME
-      # DATABASE_URL is injected automatically by the attached dev database;
-      # settings.py prefers it over the POSTGRES_* fallbacks.
+      # Bindable reference to the attached database — DO resolves this to the
+      # real connection string at runtime. settings.py prefers DATABASE_URL
+      # over the POSTGRES_* fallbacks. NOT auto-injected; must be bound here.
+      - key: DATABASE_URL
+        value: "${dev-db-637500.DATABASE_URL}"
+        scope: RUN_TIME
 
   - name: pintora-frontend
     source_dir: frontend
