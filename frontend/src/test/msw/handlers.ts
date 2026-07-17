@@ -2,7 +2,12 @@ import { http, HttpResponse } from "msw";
 
 import { API_BASE_URL } from "@/lib/api/csrf";
 
-import { buildRecipeDetail, buildRecipeListItem, paginated } from "../fixtures";
+import {
+  buildRecipeDetail,
+  buildRecipeListItem,
+  buildRecipeWrite,
+  paginated,
+} from "../fixtures";
 
 /** Absolute URL matching the API client's baseUrl. */
 export const api = (path: string) => `${API_BASE_URL}${path}`;
@@ -36,6 +41,10 @@ export const handlers = [
     }
     return HttpResponse.json({ detail: "Not found." }, { status: 404 });
   }),
+
+  http.post(api("/api/recipes/"), () =>
+    HttpResponse.json(buildRecipeWrite(), { status: 201 }),
+  ),
 
   http.get(api("/api/me/"), () =>
     HttpResponse.json(

@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
@@ -23,6 +23,8 @@ async function fillAndSubmit(email: string, password: string) {
 }
 
 describe("LoginView", () => {
+  beforeEach(() => pushMock.mockClear());
+
   it("logs in and redirects home", async () => {
     let requestBody: unknown;
     server.use(
@@ -40,6 +42,20 @@ describe("LoginView", () => {
       email: "mel@example.com",
       password: "hunter2secure",
     });
+  });
+
+  it("validates the email before hitting the network", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<LoginView />);
+
+    await user.type(screen.getByLabelText(/email/i), "not-an-email");
+    await user.type(screen.getByLabelText(/password/i), "hunter2secure");
+    await user.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(
+      await screen.findByText("Enter a valid email address."),
+    ).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it("surfaces the API error message on bad credentials", async () => {

@@ -1,3 +1,4 @@
+import type { components } from "@/lib/api/schema";
 import type {
   PaginatedRecipes,
   RecipeDetail,
@@ -5,6 +6,8 @@ import type {
   UserMe,
   UserPublic,
 } from "@/types";
+
+type RecipeWrite = components["schemas"]["RecipeWrite"];
 
 /**
  * Typed fixture builders. Because these `satisfies` the generated API types,
@@ -70,6 +73,19 @@ export function buildRecipeDetail(
     updated_at: "2026-07-02T12:00:00Z",
     ...overrides,
   } satisfies RecipeDetail;
+}
+
+export function buildRecipeWrite(
+  overrides: Partial<RecipeWrite> = {},
+): RecipeWrite {
+  return {
+    title: "Vanilla Bean Dream",
+    slug: "vanilla-bean-dream",
+    instructions: "Blend the base.",
+    ingredients: [],
+    is_published: true,
+    ...overrides,
+  } satisfies RecipeWrite;
 }
 
 export function paginated(results: RecipeListItem[]): PaginatedRecipes {
