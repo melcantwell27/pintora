@@ -6,8 +6,8 @@ info:
 paths:
   /api/me/:
     get:
-      operationId: me_list
-      description: Endpoints for the currently authenticated user.
+      operationId: me_retrieve
+      description: The currently authenticated user (single object, not a list).
       tags:
       - me
       security:
@@ -17,14 +17,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserMe'
+                $ref: '#/components/schemas/UserMe'
           description: ''
   /api/me/profile/:
     patch:
-      operationId: me_profile_partial_update
-      description: Endpoints for the currently authenticated user.
+      operationId: me_profile_update
+      description: Partial profile updates for the currently authenticated user.
       tags:
       - me
       requestBody:

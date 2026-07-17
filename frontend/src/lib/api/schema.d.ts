@@ -11,8 +11,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Endpoints for the currently authenticated user. */
-        get: operations["me_list"];
+        /** @description The currently authenticated user (single object, not a list). */
+        get: operations["me_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -34,8 +34,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Endpoints for the currently authenticated user. */
-        patch: operations["me_profile_partial_update"];
+        /** @description Partial profile updates for the currently authenticated user. */
+        patch: operations["me_profile_update"];
         trace?: never;
     };
     "/api/recipes/": {
@@ -261,7 +261,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    me_list: {
+    me_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -275,12 +275,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserMe"][];
+                    "application/json": components["schemas"]["UserMe"];
                 };
             };
         };
     };
-    me_profile_partial_update: {
+    me_profile_update: {
         parameters: {
             query?: never;
             header?: never;
