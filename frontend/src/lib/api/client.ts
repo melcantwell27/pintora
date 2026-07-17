@@ -26,6 +26,10 @@ const csrfMiddleware: Middleware = {
 export const apiClient = createClient<paths>({
   baseUrl: API_BASE_URL,
   credentials: "include",
+  // Late-bind so runtime patches of global fetch (MSW in tests, Next.js on
+  // the server) are picked up; createClient would otherwise capture the
+  // original fetch at module-load time.
+  fetch: (request) => globalThis.fetch(request),
 });
 
 apiClient.use(csrfMiddleware);
