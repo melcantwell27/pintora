@@ -4,6 +4,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 
 import { GlobalSnackbar } from "@/components/layout/GlobalSnackbar";
@@ -30,6 +31,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <SessionGate>{children}</SessionGate>
           <GlobalSnackbar />
+          {/* Renders nothing in production builds. */}
+          <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </ThemeProvider>
     </AppRouterCacheProvider>

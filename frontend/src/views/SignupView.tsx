@@ -16,8 +16,8 @@ import { useState } from "react";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ROUTES } from "@/constants";
-import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { AuthError, signup } from "@/lib/api/authClient";
+import { sessionKeys } from "@/lib/queryKeys";
 
 export function SignupView() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export function SignupView() {
     setSubmitting(true);
     try {
       await signup(email, password);
-      await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: sessionKeys.me() });
       router.push(ROUTES.home);
     } catch (err) {
       setError(

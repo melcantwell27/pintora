@@ -11,8 +11,9 @@ import NextLink from "next/link";
 import { useState } from "react";
 
 import { ROUTES } from "@/constants";
-import { SESSION_QUERY_KEY, useSession } from "@/hooks/useSession";
+import { useSession } from "@/hooks/useSession";
 import { logout } from "@/lib/api/authClient";
+import { sessionKeys } from "@/lib/queryKeys";
 import { useUiStore } from "@/store/useUiStore";
 import { accentForKey } from "@/styles/accents";
 
@@ -66,7 +67,7 @@ export function ProfileView() {
     setLoggingOut(true);
     try {
       await logout();
-      await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: sessionKeys.me() });
     } catch {
       showSnackbar("Could not log out. Please try again.");
     } finally {

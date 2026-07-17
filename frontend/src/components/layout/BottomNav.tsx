@@ -10,12 +10,13 @@ import Paper from "@mui/material/Paper";
 import { usePathname, useRouter } from "next/navigation";
 
 import { ROUTES } from "@/constants";
-import { useSessionStore } from "@/store/useSessionStore";
+import { useSession } from "@/hooks/useSession";
 
 export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const isAuthenticated = useSessionStore((s) => s.isAuthenticated);
+  const { data: user } = useSession();
+  const isAuthenticated = Boolean(user);
 
   // The last tab reflects auth state: "Profile" when signed in, otherwise a
   // "Sign in" shortcut to the login page.
