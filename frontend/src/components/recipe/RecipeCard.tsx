@@ -28,7 +28,11 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
             {recipe.title}
           </Typography>
 
-          <Stack direction="row" spacing={1} sx={{ mb: 1.75, alignItems: "center" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mb: 1.75, alignItems: "center" }}
+          >
             <Avatar
               sx={{
                 width: 26,
@@ -46,7 +50,12 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
             </Typography>
           </Stack>
 
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: "wrap" }}
+          >
             <ProgramChip label={recipe.program_display} />
             {recipe.tags.map((tag) => (
               <TagChip key={tag.slug} label={tag.label} />

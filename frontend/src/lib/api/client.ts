@@ -1,6 +1,6 @@
 import createClient, { type Middleware } from "openapi-fetch";
 
-import { getCookie } from "./csrf";
+import { API_BASE_URL, getCookie } from "./csrf";
 import type { paths } from "./schema";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
@@ -24,7 +24,7 @@ const csrfMiddleware: Middleware = {
  * `credentials: "include"` sends the session cookie for authenticated calls.
  */
 export const apiClient = createClient<paths>({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8001",
+  baseUrl: API_BASE_URL,
   credentials: "include",
 });
 

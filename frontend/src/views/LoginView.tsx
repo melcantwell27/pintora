@@ -93,7 +93,11 @@ export function LoginView() {
 
       <Typography sx={{ mt: 3, textAlign: "center" }} color="text.secondary">
         New here?{" "}
-        <Link component={NextLink} href={ROUTES.signup} sx={{ fontWeight: 700 }}>
+        <Link
+          component={NextLink}
+          href={ROUTES.signup}
+          sx={{ fontWeight: 700 }}
+        >
           Create an account
         </Link>
       </Typography>

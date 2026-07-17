@@ -30,7 +30,11 @@ export function RecipeFeedList({
   }
 
   if (isError) {
-    return <Alert severity="error">Couldn&apos;t load recipes. Is the API running?</Alert>;
+    return (
+      <Alert severity="error">
+        Couldn&apos;t load recipes. Is the API running?
+      </Alert>
+    );
   }
 
   if (!recipes || recipes.length === 0) {

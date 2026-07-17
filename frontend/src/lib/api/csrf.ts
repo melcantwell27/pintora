@@ -4,8 +4,9 @@
  * must echo it back in the `X-CSRFToken` header.
  */
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8001";
+import { env } from "@/env";
+
+export const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 
 /** allauth headless browser-client base, e.g. .../\_allauth/browser/v1 */
 export const ALLAUTH_BASE_URL = `${API_BASE_URL}/_allauth/browser/v1`;

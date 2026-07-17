@@ -109,26 +109,18 @@ export interface components {
             results: components["schemas"]["RecipeList"][];
         };
         /** @description Input DTO for create/update — nested ingredients on write. */
-        PatchedRecipeWrite: {
+        PatchedRecipeWriteRequest: {
             title?: string;
             instructions?: string;
             program?: components["schemas"]["ProgramEnum"] | components["schemas"]["BlankEnum"];
-            ingredients?: components["schemas"]["RecipeIngredientWrite"][];
+            ingredients?: components["schemas"]["RecipeIngredientWriteRequest"][];
             tag_slugs?: string[];
             is_published?: boolean;
         };
         /** @description Current authenticated user — used by the FE for global session context. */
-        PatchedUserMe: {
-            readonly id?: number;
-            /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
-            readonly username?: string;
-            /**
-             * Email address
-             * Format: email
-             */
-            readonly email?: string;
+        PatchedUserMeRequest: {
             bio?: string;
-            /** Format: uri */
+            /** Format: binary */
             avatar?: string | null;
         };
         /**
@@ -187,6 +179,15 @@ export interface components {
             prep_note?: string;
             sort_order?: number;
         };
+        RecipeIngredientWriteRequest: {
+            section?: components["schemas"]["SectionEnum"];
+            name: string;
+            /** Format: decimal */
+            quantity?: string | null;
+            unit?: string;
+            prep_note?: string;
+            sort_order?: number;
+        };
         /** @description Lightweight DTO for feeds and search results. */
         RecipeList: {
             readonly id: number;
@@ -202,9 +203,19 @@ export interface components {
         /** @description Input DTO for create/update — nested ingredients on write. */
         RecipeWrite: {
             title: string;
+            readonly slug: string;
             instructions: string;
             program?: components["schemas"]["ProgramEnum"] | components["schemas"]["BlankEnum"];
             ingredients: components["schemas"]["RecipeIngredientWrite"][];
+            tag_slugs?: string[];
+            is_published?: boolean;
+        };
+        /** @description Input DTO for create/update — nested ingredients on write. */
+        RecipeWriteRequest: {
+            title: string;
+            instructions: string;
+            program?: components["schemas"]["ProgramEnum"] | components["schemas"]["BlankEnum"];
+            ingredients: components["schemas"]["RecipeIngredientWriteRequest"][];
             tag_slugs?: string[];
             is_published?: boolean;
         };
@@ -278,9 +289,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedUserMe"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedUserMe"];
-                "multipart/form-data": components["schemas"]["PatchedUserMe"];
+                "application/json": components["schemas"]["PatchedUserMeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedUserMeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedUserMeRequest"];
             };
         };
         responses: {
@@ -329,9 +340,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecipeWrite"];
-                "application/x-www-form-urlencoded": components["schemas"]["RecipeWrite"];
-                "multipart/form-data": components["schemas"]["RecipeWrite"];
+                "application/json": components["schemas"]["RecipeWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecipeWriteRequest"];
+                "multipart/form-data": components["schemas"]["RecipeWriteRequest"];
             };
         };
         responses: {
@@ -377,9 +388,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecipeWrite"];
-                "application/x-www-form-urlencoded": components["schemas"]["RecipeWrite"];
-                "multipart/form-data": components["schemas"]["RecipeWrite"];
+                "application/json": components["schemas"]["RecipeWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecipeWriteRequest"];
+                "multipart/form-data": components["schemas"]["RecipeWriteRequest"];
             };
         };
         responses: {
@@ -424,9 +435,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedRecipeWrite"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedRecipeWrite"];
-                "multipart/form-data": components["schemas"]["PatchedRecipeWrite"];
+                "application/json": components["schemas"]["PatchedRecipeWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRecipeWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRecipeWriteRequest"];
             };
         };
         responses: {

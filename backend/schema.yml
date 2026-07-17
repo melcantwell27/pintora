@@ -31,13 +31,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedUserMe'
+              $ref: '#/components/schemas/PatchedUserMeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedUserMe'
+              $ref: '#/components/schemas/PatchedUserMeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedUserMe'
+              $ref: '#/components/schemas/PatchedUserMeRequest'
       security:
       - cookieAuth: []
       responses:
@@ -89,13 +89,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
         required: true
       security:
       - cookieAuth: []
@@ -141,13 +141,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
         required: true
       security:
       - cookieAuth: []
@@ -172,13 +172,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedRecipeWrite'
+              $ref: '#/components/schemas/PatchedRecipeWriteRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedRecipeWrite'
+              $ref: '#/components/schemas/PatchedRecipeWriteRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedRecipeWrite'
+              $ref: '#/components/schemas/PatchedRecipeWriteRequest'
       security:
       - cookieAuth: []
       responses:
@@ -255,15 +255,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecipeList'
-    PatchedRecipeWrite:
+    PatchedRecipeWriteRequest:
       type: object
       description: Input DTO for create/update — nested ingredients on write.
       properties:
         title:
           type: string
+          minLength: 1
           maxLength: 200
         instructions:
           type: string
+          minLength: 1
         program:
           oneOf:
           - $ref: '#/components/schemas/ProgramEnum'
@@ -271,36 +273,24 @@ components:
         ingredients:
           type: array
           items:
-            $ref: '#/components/schemas/RecipeIngredientWrite'
+            $ref: '#/components/schemas/RecipeIngredientWriteRequest'
         tag_slugs:
           type: array
           items:
             type: string
+            minLength: 1
         is_published:
           type: boolean
-    PatchedUserMe:
+    PatchedUserMeRequest:
       type: object
       description: Current authenticated user — used by the FE for global session
         context.
       properties:
-        id:
-          type: integer
-          readOnly: true
-        username:
-          type: string
-          readOnly: true
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-        email:
-          type: string
-          format: email
-          readOnly: true
-          title: Email address
         bio:
           type: string
         avatar:
           type: string
-          format: uri
+          format: binary
           nullable: true
     ProgramEnum:
       enum:
@@ -459,6 +449,32 @@ components:
           minimum: 0
       required:
       - name
+    RecipeIngredientWriteRequest:
+      type: object
+      properties:
+        section:
+          $ref: '#/components/schemas/SectionEnum'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        unit:
+          type: string
+          maxLength: 50
+        prep_note:
+          type: string
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - name
     RecipeList:
       type: object
       description: Lightweight DTO for feeds and search results.
@@ -509,6 +525,10 @@ components:
         title:
           type: string
           maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
         instructions:
           type: string
         program:
@@ -523,6 +543,37 @@ components:
           type: array
           items:
             type: string
+        is_published:
+          type: boolean
+      required:
+      - ingredients
+      - instructions
+      - slug
+      - title
+    RecipeWriteRequest:
+      type: object
+      description: Input DTO for create/update — nested ingredients on write.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        instructions:
+          type: string
+          minLength: 1
+        program:
+          oneOf:
+          - $ref: '#/components/schemas/ProgramEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientWriteRequest'
+        tag_slugs:
+          type: array
+          items:
+            type: string
+            minLength: 1
         is_published:
           type: boolean
       required:

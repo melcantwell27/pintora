@@ -109,9 +109,21 @@ export const theme = createTheme({
   typography: {
     fontFamily: fonts.sans,
     fontWeightBold: 800,
-    h1: { fontFamily: fonts.display, fontWeight: 700, letterSpacing: "-0.01em" },
-    h2: { fontFamily: fonts.display, fontWeight: 700, letterSpacing: "-0.01em" },
-    h3: { fontFamily: fonts.display, fontWeight: 700, letterSpacing: "-0.01em" },
+    h1: {
+      fontFamily: fonts.display,
+      fontWeight: 700,
+      letterSpacing: "-0.01em",
+    },
+    h2: {
+      fontFamily: fonts.display,
+      fontWeight: 700,
+      letterSpacing: "-0.01em",
+    },
+    h3: {
+      fontFamily: fonts.display,
+      fontWeight: 700,
+      letterSpacing: "-0.01em",
+    },
     h4: { fontFamily: fonts.display, fontWeight: 700 },
     h5: { fontFamily: fonts.display, fontWeight: 700 },
     h6: { fontFamily: fonts.display, fontWeight: 700 },

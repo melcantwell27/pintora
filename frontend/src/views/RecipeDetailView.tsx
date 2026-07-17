@@ -54,7 +54,12 @@ export function RecipeDetailView({ slug }: { slug: string }) {
       <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
         <ProgramChip label={recipe.program_display} />
         {recipe.tags.map((tag) => (
-          <Chip key={tag.slug} size="small" variant="outlined" label={`#${tag.label}`} />
+          <Chip
+            key={tag.slug}
+            size="small"
+            variant="outlined"
+            label={`#${tag.label}`}
+          />
         ))}
       </Stack>
 
