@@ -5,11 +5,10 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
 
 import { GlobalSnackbar } from "@/components/layout/GlobalSnackbar";
 import { useSession } from "@/hooks/useSession";
-import { makeQueryClient } from "@/lib/queryClient";
+import { getQueryClient } from "@/lib/queryClient";
 import { theme } from "@/styles/theme";
 
 /**
@@ -22,7 +21,9 @@ function SessionGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(makeQueryClient);
+  // getQueryClient (not useState): keeps the same client if React suspends
+  // during initial render, and there's no server/browser branch mismatch.
+  const queryClient = getQueryClient();
 
   return (
     <AppRouterCacheProvider>

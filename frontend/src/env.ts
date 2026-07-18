@@ -6,6 +6,11 @@ import { z } from "zod";
  * time instead of surfacing later as a broken API base URL.
  */
 export const env = createEnv({
+  server: {
+    // Server-side API origin (e.g. an internal hostname in containerized
+    // deploys). Falls back to the public URL when unset.
+    API_BASE_URL: z.url().optional(),
+  },
   client: {
     NEXT_PUBLIC_API_BASE_URL: z.url().default("http://localhost:8001"),
   },
