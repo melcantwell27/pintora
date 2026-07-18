@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
 import NextLink from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ROUTES } from "@/constants";
@@ -18,6 +19,7 @@ import { useUiStore } from "@/store/useUiStore";
 import { accentForKey } from "@/styles/accents";
 
 export function ProfileView() {
+  const router = useRouter();
   const { data: user, isLoading } = useSession();
   const queryClient = useQueryClient();
   const showSnackbar = useUiStore((s) => s.showSnackbar);
@@ -68,6 +70,8 @@ export function ProfileView() {
     try {
       await logout();
       await queryClient.invalidateQueries({ queryKey: sessionKeys.me() });
+      // Drop server-rendered output tied to the old session cookie.
+      router.refresh();
     } catch {
       showSnackbar("Could not log out. Please try again.");
     } finally {

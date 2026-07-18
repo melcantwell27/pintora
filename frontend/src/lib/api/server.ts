@@ -5,7 +5,7 @@ import createClient, { type Middleware } from "openapi-fetch";
 import { cache } from "react";
 
 import { env } from "@/env";
-import type { RecipeDetail } from "@/types";
+import type { RecipeDetail, UserMe } from "@/types";
 
 import type { paths } from "./schema";
 
@@ -35,6 +35,17 @@ export const serverApiClient = createClient<paths>({
 });
 
 serverApiClient.use(forwardCookies);
+
+/**
+ * Current user via the forwarded session cookie, or null when anonymous.
+ * The authoritative server-side auth check for protected pages (the proxy
+ * only checks that a session cookie exists, not that it's valid).
+ */
+export async function fetchMe(): Promise<UserMe | null> {
+  const { data, response } = await serverApiClient.GET("/api/me/");
+  if (response.status === 401 || response.status === 403) return null;
+  return data ?? null;
+}
 
 /** Feed prefetch. Throws on failure — callers decide whether to swallow. */
 export async function fetchRecipeList(search?: string) {

@@ -11,7 +11,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import { GoogleButton } from "@/components/auth/GoogleButton";
@@ -23,7 +23,14 @@ import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 
 export function LoginView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  // Only same-origin paths — never redirect to an absolute URL from a param.
+  const nextParam = searchParams.get("next");
+  const nextPath =
+    nextParam?.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : ROUTES.home;
   const {
     register,
     handleSubmit,
@@ -38,7 +45,10 @@ export function LoginView() {
     try {
       await login(email, password);
       await queryClient.invalidateQueries({ queryKey: sessionKeys.me() });
-      router.push(ROUTES.home);
+      router.push(nextPath);
+      // Re-render server components with the new session cookie — the RQ
+      // cache update alone doesn't refresh dehydrated server output.
+      router.refresh();
     } catch (err) {
       setError("root.serverError", {
         message:

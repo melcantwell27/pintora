@@ -9,10 +9,14 @@ import { renderWithProviders } from "@/test/test-utils";
 
 import { LoginView } from "./LoginView";
 
-const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
+const { pushMock, searchParamsRef } = vi.hoisted(() => ({
+  pushMock: vi.fn(),
+  searchParamsRef: { current: new URLSearchParams() },
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => searchParamsRef.current,
 }));
 
 async function fillAndSubmit(email: string, password: string) {
@@ -23,7 +27,10 @@ async function fillAndSubmit(email: string, password: string) {
 }
 
 describe("LoginView", () => {
-  beforeEach(() => pushMock.mockClear());
+  beforeEach(() => {
+    pushMock.mockClear();
+    searchParamsRef.current = new URLSearchParams();
+  });
 
   it("logs in and redirects home", async () => {
     let requestBody: unknown;
@@ -42,6 +49,26 @@ describe("LoginView", () => {
       email: "mel@example.com",
       password: "hunter2secure",
     });
+  });
+
+  it("honors a safe ?next= path after login", async () => {
+    searchParamsRef.current = new URLSearchParams("next=/create");
+
+    renderWithProviders(<LoginView />);
+    await fillAndSubmit("mel@example.com", "hunter2secure");
+
+    await vi.waitFor(() => expect(pushMock).toHaveBeenCalledWith("/create"));
+  });
+
+  it("ignores an absolute-URL ?next= (open redirect guard)", async () => {
+    searchParamsRef.current = new URLSearchParams(
+      "next=https://evil.example.com",
+    );
+
+    renderWithProviders(<LoginView />);
+    await fillAndSubmit("mel@example.com", "hunter2secure");
+
+    await vi.waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
   });
 
   it("validates the email before hitting the network", async () => {
