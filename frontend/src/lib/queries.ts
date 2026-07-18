@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api/client";
-import { recipeKeys, sessionKeys } from "@/lib/queryKeys";
+import { recipeKeys, sessionKeys, tagKeys } from "@/lib/queryKeys";
 import type { UserMe } from "@/types";
 
 /**
@@ -32,6 +32,18 @@ export function recipeDetailQuery(slug: string) {
       if (error || !data) throw new Error("Failed to load recipe");
       return data;
     },
+  });
+}
+
+export function tagListQuery() {
+  return queryOptions({
+    queryKey: tagKeys.list(),
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/tags/");
+      if (error || !data) throw new Error("Failed to load tags");
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 }
 

@@ -2,12 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
-import IconButton from "@mui/material/IconButton";
+import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
@@ -15,16 +14,22 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useState } from "react";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 
+import { IngredientEditorRow } from "@/components/recipe/IngredientEditorRow";
+import { TagPicker } from "@/components/recipe/TagPicker";
 import { ROUTES } from "@/constants";
 import { PROGRAM_OPTIONS } from "@/constants/programs";
 import { useCreateRecipe } from "@/hooks/useCreateRecipe";
+import { useParseIngredients } from "@/hooks/useParseIngredients";
+import { useTags } from "@/hooks/useTags";
 import {
   recipeFormSchema,
   toRecipePayload,
   type RecipeFormValues,
 } from "@/lib/schemas/recipe";
+import { lemonBumpSx } from "@/styles/clay";
 import { useUiStore } from "@/store/useUiStore";
 
 /**
@@ -35,6 +40,9 @@ export function CreateRecipeView() {
   const router = useRouter();
   const showSnackbar = useUiStore((s) => s.showSnackbar);
   const createRecipe = useCreateRecipe();
+  const parseIngredients = useParseIngredients();
+  const { data: tags = [] } = useTags();
+  const [parseWarnings, setParseWarnings] = useState<string[]>([]);
 
   const {
     control,
@@ -46,15 +54,40 @@ export function CreateRecipeView() {
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       title: "",
-      instructions: "",
+      ingredients_text: "",
+      special_prep: "",
       program: "",
+      tag_slugs: [],
       ingredients: [],
     },
   });
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "ingredients",
   });
+
+  const ingredientsText = useWatch({ control, name: "ingredients_text" });
+
+  const onParse = async () => {
+    if (!ingredientsText?.trim()) return;
+    try {
+      const result = await parseIngredients.mutateAsync({
+        text: ingredientsText,
+      });
+      replace(
+        result.ingredients.map((ingredient) => ({
+          section: ingredient.section,
+          name: ingredient.name,
+          quantity: ingredient.quantity ?? "",
+          unit: ingredient.unit,
+        })),
+      );
+      setParseWarnings(result.warnings);
+    } catch {
+      setParseWarnings([]);
+      showSnackbar("Couldn't parse that — try editing rows manually.");
+    }
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -69,8 +102,9 @@ export function CreateRecipeView() {
   });
 
   const { ref: titleRef, ...titleProps } = register("title");
-  const { ref: instructionsRef, ...instructionsProps } =
-    register("instructions");
+  const { ref: ingredientsTextRef, ...ingredientsTextProps } =
+    register("ingredients_text");
+  const { ref: specialPrepRef, ...specialPrepProps } = register("special_prep");
 
   return (
     <Stack spacing={2} component="form" onSubmit={onSubmit} noValidate>
@@ -90,16 +124,34 @@ export function CreateRecipeView() {
         helperText={errors.title?.message}
         fullWidth
       />
-      <TextField
-        label="Instructions"
-        {...instructionsProps}
-        inputRef={instructionsRef}
-        error={Boolean(errors.instructions)}
-        helperText={errors.instructions?.message}
-        fullWidth
-        multiline
-        minRows={3}
-      />
+
+      <Box>
+        <TextField
+          label="What's in the pint?"
+          placeholder="1 cup Fairlife, 2 tbsp cocoa, handful of strawberries…"
+          {...ingredientsTextProps}
+          inputRef={ingredientsTextRef}
+          fullWidth
+          multiline
+          minRows={3}
+        />
+        <Button
+          onClick={onParse}
+          disabled={!ingredientsText?.trim() || parseIngredients.isPending}
+          sx={(theme) => ({
+            mt: 1,
+            ...lemonBumpSx(theme.palette.primary.main),
+          })}
+        >
+          {parseIngredients.isPending ? "Parsing…" : "Parse & replace rows"}
+        </Button>
+        {parseWarnings.length > 0 && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            {parseWarnings.join(" ")}
+          </Alert>
+        )}
+      </Box>
+
       <Controller
         name="program"
         control={control}
@@ -127,45 +179,63 @@ export function CreateRecipeView() {
 
       <Box>
         <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+          Tags (optional)
+        </Typography>
+        <Controller
+          name="tag_slugs"
+          control={control}
+          render={({ field }) => (
+            <TagPicker
+              options={tags}
+              value={field.value}
+              onChange={field.onChange}
+              disabled={isSubmitting}
+            />
+          )}
+        />
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
           Ingredients
         </Typography>
+        {errors.ingredients?.message && (
+          <FormHelperText error sx={{ mb: 1 }}>
+            {errors.ingredients.message}
+          </FormHelperText>
+        )}
         <Stack spacing={1.5}>
-          {fields.map((field, index) => {
-            const { ref, ...nameProps } = register(`ingredients.${index}.name`);
-            return (
-              <Stack
-                key={field.id}
-                direction="row"
-                spacing={1}
-                sx={{ alignItems: "flex-start" }}
-              >
-                <TextField
-                  label={`Ingredient ${index + 1}`}
-                  size="small"
-                  {...nameProps}
-                  inputRef={ref}
-                  error={Boolean(errors.ingredients?.[index]?.name)}
-                  helperText={errors.ingredients?.[index]?.name?.message}
-                  fullWidth
-                />
-                <IconButton
-                  aria-label={`Remove ingredient ${index + 1}`}
-                  onClick={() => remove(index)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Stack>
-            );
-          })}
+          {fields.map((field, index) => (
+            <IngredientEditorRow
+              key={field.id}
+              index={index}
+              control={control}
+              register={register}
+              nameError={errors.ingredients?.[index]?.name}
+              onRemove={() => remove(index)}
+            />
+          ))}
         </Stack>
         <Button
           startIcon={<AddIcon />}
-          onClick={() => append({ name: "" })}
+          onClick={() =>
+            append({ section: "base", name: "", quantity: "", unit: "" })
+          }
           sx={{ mt: 1 }}
         >
           Add ingredient
         </Button>
       </Box>
+
+      <TextField
+        label="Special prep (optional)"
+        placeholder="Anything unique about this pint's method…"
+        {...specialPrepProps}
+        inputRef={specialPrepRef}
+        fullWidth
+        multiline
+        minRows={2}
+      />
 
       <Box>
         <Button type="submit" variant="contained" disabled={isSubmitting}>

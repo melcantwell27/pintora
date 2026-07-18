@@ -19,11 +19,11 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
   return (
     <Card>
       <CardActionArea component={Link} href={ROUTES.recipe(recipe.slug)}>
-        <CardContent sx={{ p: 2.5 }}>
+        <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
           <Typography
             variant="h6"
             component="h2"
-            sx={{ fontWeight: 700, lineHeight: 1.2, mb: 1.25 }}
+            sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0.75 }}
           >
             {recipe.title}
           </Typography>
@@ -31,7 +31,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
           <Stack
             direction="row"
             spacing={1}
-            sx={{ mb: 1.75, alignItems: "center" }}
+            sx={{ mb: 1, alignItems: "center" }}
           >
             <Avatar
               sx={{
@@ -41,6 +41,8 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
                 fontWeight: 800,
                 bgcolor: accent.bg,
                 color: accent.fg,
+                border: "2px solid",
+                borderColor: accent.fg,
               }}
             >
               {initial}

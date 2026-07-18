@@ -18,7 +18,12 @@ export function AddCreamiFab() {
       variant="extended"
       aria-label="Add Creami"
       onClick={() => router.push(ROUTES.create)}
-      sx={{ position: "fixed", bottom: 80, right: 16, zIndex: 1200 }}
+      sx={{
+        position: "fixed",
+        bottom: 80,
+        right: 16,
+        zIndex: 1200,
+      }}
     >
       <AddIcon sx={{ mr: 1 }} />
       Add Creami

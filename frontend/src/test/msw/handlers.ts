@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import { API_BASE_URL } from "@/lib/api/csrf";
 
 import {
+  buildParseResponse,
   buildRecipeDetail,
   buildRecipeListItem,
   buildRecipeWrite,
@@ -44,6 +45,19 @@ export const handlers = [
 
   http.post(api("/api/recipes/"), () =>
     HttpResponse.json(buildRecipeWrite(), { status: 201 }),
+  ),
+
+  http.post(api("/api/recipes/parse-ingredients/"), () =>
+    HttpResponse.json(buildParseResponse()),
+  ),
+
+  http.get(api("/api/tags/"), () =>
+    HttpResponse.json([
+      { slug: "high-protein", label: "High Protein" },
+      { slug: "vegan", label: "Vegan" },
+      { slug: "chocolate", label: "Chocolate" },
+      { slug: "fruity", label: "Fruity" },
+    ]),
   ),
 
   http.get(api("/api/me/"), () =>

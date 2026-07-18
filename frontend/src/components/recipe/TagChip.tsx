@@ -12,7 +12,7 @@ export function TagChip({ label }: { label: string }) {
         bgcolor: accent.bg,
         color: accent.fg,
         fontWeight: 700,
-        border: "none",
+        borderColor: accent.fg,
       }}
     />
   );

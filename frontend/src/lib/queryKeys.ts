@@ -10,6 +10,10 @@ export const recipeKeys = {
   detail: (slug: string) => ["recipe", slug] as const,
 };
 
+export const tagKeys = {
+  list: () => ["tags"] as const,
+};
+
 export const sessionKeys = {
   me: () => ["me"] as const,
 };

@@ -8,6 +8,9 @@ import type {
 } from "@/types";
 
 type RecipeWrite = components["schemas"]["RecipeWrite"];
+type ParsedIngredient = components["schemas"]["ParsedIngredient"];
+type ParseIngredientsResponse =
+  components["schemas"]["ParseIngredientsResponse"];
 
 /**
  * Typed fixture builders. Because these `satisfies` the generated API types,
@@ -56,7 +59,8 @@ export function buildRecipeDetail(
 ): RecipeDetail {
   return {
     ...buildRecipeListItem(),
-    instructions: "Blend the base.\nSpin on Ice Cream.",
+    special_prep: "Spin twice for extra creaminess.",
+    ingredients_text: "1.5 cup almond milk",
     ingredients: [
       {
         id: 1,
@@ -81,11 +85,43 @@ export function buildRecipeWrite(
   return {
     title: "Vanilla Bean Dream",
     slug: "vanilla-bean-dream",
-    instructions: "Blend the base.",
+    special_prep: "",
+    ingredients_text: "",
     ingredients: [],
     is_published: true,
     ...overrides,
   } satisfies RecipeWrite;
+}
+
+export function buildParsedIngredient(
+  overrides: Partial<ParsedIngredient> = {},
+): ParsedIngredient {
+  return {
+    section: "base",
+    name: "almond milk",
+    quantity: "1",
+    unit: "cup",
+    sort_order: 0,
+    ...overrides,
+  } satisfies ParsedIngredient;
+}
+
+export function buildParseResponse(
+  overrides: Partial<ParseIngredientsResponse> = {},
+): ParseIngredientsResponse {
+  return {
+    ingredients: [
+      buildParsedIngredient(),
+      buildParsedIngredient({
+        name: "cocoa powder",
+        quantity: "2",
+        unit: "tbsp",
+        sort_order: 1,
+      }),
+    ],
+    warnings: [],
+    ...overrides,
+  } satisfies ParseIngredientsResponse;
 }
 
 export function paginated(results: RecipeListItem[]): PaginatedRecipes {

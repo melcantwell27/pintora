@@ -9,6 +9,7 @@ import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import Paper from "@mui/material/Paper";
 import { usePathname, useRouter } from "next/navigation";
 
+import { CLAY } from "@/styles/clay";
 import { ROUTES } from "@/constants";
 import { useSession } from "@/hooks/useSession";
 
@@ -39,16 +40,19 @@ export function BottomNav() {
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         position: "fixed",
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 1100,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderRadius: `${CLAY.radiusCard}px ${CLAY.radiusCard}px 0 0`,
         overflow: "hidden",
+        bgcolor: "background.paper",
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        borderBottom: "none",
+        boxShadow: (theme) => CLAY.shadow.lg(theme.palette.primary.main),
       }}
     >
       <BottomNavigation

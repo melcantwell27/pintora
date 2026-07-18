@@ -47,7 +47,8 @@ class Recipe(models.Model):
     )
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
-    instructions = models.TextField()
+    special_prep = models.TextField(blank=True, default="")
+    ingredients_text = models.TextField(blank=True, default="")
     program = models.CharField(
         max_length=20,
         choices=Program.choices,
@@ -66,12 +67,17 @@ class Recipe(models.Model):
             models.Index(fields=["is_published", "-created_at"]),
         ]
 
+    RESERVED_SLUGS = {"parse-ingredients"}
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base = slugify(self.title)[:200] or "recipe"
             slug = base
             counter = 1
-            while Recipe.objects.exclude(pk=self.pk).filter(slug=slug).exists():
+            while (
+                Recipe.objects.exclude(pk=self.pk).filter(slug=slug).exists()
+                or slug in self.RESERVED_SLUGS
+            ):
                 counter += 1
                 slug = f"{base}-{counter}"
             self.slug = slug
