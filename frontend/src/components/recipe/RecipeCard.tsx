@@ -5,6 +5,7 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
+import { memo } from "react";
 
 import { ProgramChip } from "@/components/recipe/ProgramChip";
 import { TagChip } from "@/components/recipe/TagChip";
@@ -12,7 +13,15 @@ import { ROUTES } from "@/constants";
 import { accentForKey } from "@/styles/accents";
 import type { RecipeListItem } from "@/types";
 
-export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
+/**
+ * memo: feed parents re-render per keystroke (SearchView) while the recipe
+ * references stay stable until fresh data lands — skip re-rendering cards.
+ */
+export const RecipeCard = memo(function RecipeCard({
+  recipe,
+}: {
+  recipe: RecipeListItem;
+}) {
   const accent = accentForKey(recipe.created_by.username);
   const initial = recipe.created_by.username.charAt(0).toUpperCase();
 
@@ -67,4 +76,4 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
       </CardActionArea>
     </Card>
   );
-}
+});
