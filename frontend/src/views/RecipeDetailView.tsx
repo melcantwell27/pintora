@@ -4,7 +4,6 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
@@ -13,6 +12,7 @@ import Link from "next/link";
 
 import { IngredientList } from "@/components/recipe/IngredientList";
 import { ProgramChip } from "@/components/recipe/ProgramChip";
+import { TagChip } from "@/components/recipe/TagChip";
 import { ROUTES } from "@/constants";
 import { useRecipe } from "@/hooks/useRecipe";
 
@@ -38,6 +38,8 @@ export function RecipeDetailView({ slug }: { slug: string }) {
         component={Link}
         href={ROUTES.home}
         startIcon={<ArrowBackIcon />}
+        variant="outlined"
+        size="small"
         sx={{ alignSelf: "flex-start" }}
       >
         Back
@@ -54,7 +56,7 @@ export function RecipeDetailView({ slug }: { slug: string }) {
       <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
         <ProgramChip label={recipe.program_display} />
         {recipe.tags.map((tag) => (
-          <Chip key={tag.slug} size="small" variant="outlined" label={`#${tag.label}`} />
+          <TagChip key={tag.slug} label={tag.label} />
         ))}
       </Stack>
 
@@ -67,16 +69,19 @@ export function RecipeDetailView({ slug }: { slug: string }) {
         <IngredientList ingredients={recipe.ingredients} />
       </Box>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="h6" gutterBottom>
-          Instructions
-        </Typography>
-        <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
-          {recipe.instructions}
-        </Typography>
-      </Box>
+      {recipe.special_prep && (
+        <>
+          <Divider />
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Special prep
+            </Typography>
+            <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+              {recipe.special_prep}
+            </Typography>
+          </Box>
+        </>
+      )}
     </Stack>
   );
 }

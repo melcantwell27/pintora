@@ -12,12 +12,7 @@ import { Wordmark } from "./Wordmark";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <Box sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
-      <AppBar
-        position="sticky"
-        color="default"
-        elevation={0}
-        sx={{ borderBottom: "1px solid", borderColor: "divider" }}
-      >
+      <AppBar position="sticky" color="default" elevation={0}>
         <Toolbar sx={{ justifyContent: "center" }}>
           <Wordmark />
         </Toolbar>

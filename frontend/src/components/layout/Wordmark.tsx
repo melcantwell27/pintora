@@ -28,7 +28,10 @@ export function Wordmark({ sx }: { sx?: SxProps<Theme> }) {
       }}
     >
       P
-      <Box component="span" sx={{ position: "relative", display: "inline-block" }}>
+      <Box
+        component="span"
+        sx={{ position: "relative", display: "inline-block" }}
+      >
         {"\u0131"}
         <Box
           component="svg"

@@ -51,7 +51,6 @@ export function GoogleButton() {
       fullWidth
       size="large"
       variant="outlined"
-      color="inherit"
       startIcon={<GoogleIcon />}
       onClick={onClick}
       disabled={loading}

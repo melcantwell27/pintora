@@ -56,11 +56,12 @@ class RecipeDetailSerializer(RecipeListSerializer):
 
     class Meta(RecipeListSerializer.Meta):
         fields = RecipeListSerializer.Meta.fields + [
-            "instructions",
+            "special_prep",
             "ingredients",
             "images",
             "is_published",
             "updated_at",
+            "ingredients_text",
         ]
 
 
@@ -68,6 +69,25 @@ class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ["section", "name", "quantity", "unit", "prep_note", "sort_order"]
+
+
+class ParsedIngredientSerializer(serializers.Serializer):
+    section = serializers.ChoiceField(choices=RecipeIngredient.Section.choices)
+    name = serializers.CharField()
+    quantity = serializers.DecimalField(
+        max_digits=8, decimal_places=2, allow_null=True
+    )
+    unit = serializers.CharField(allow_blank=True)
+    sort_order = serializers.IntegerField()
+
+
+class ParseIngredientsRequestSerializer(serializers.Serializer):
+    text = serializers.CharField(allow_blank=False, trim_whitespace=True)
+
+
+class ParseIngredientsResponseSerializer(serializers.Serializer):
+    ingredients = ParsedIngredientSerializer(many=True)
+    warnings = serializers.ListField(child=serializers.CharField())
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -88,12 +108,30 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = [
             "title",
             "slug",
-            "instructions",
+            "special_prep",
             "program",
             "ingredients",
+            "ingredients_text",
             "tag_slugs",
             "is_published",
         ]
+
+    def validate(self, attrs):
+        is_published = attrs.get(
+            "is_published",
+            self.instance.is_published if self.instance else True,
+        )
+        if "ingredients" in attrs:
+            count = len(attrs["ingredients"])
+        elif self.instance is not None:
+            count = self.instance.ingredients.count()
+        else:
+            count = 0
+        if is_published and count == 0:
+            raise serializers.ValidationError(
+                {"ingredients": "Add at least one ingredient before publishing."}
+            )
+        return attrs
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop("ingredients")

@@ -2,6 +2,8 @@
 
 import { alpha, createTheme } from "@mui/material/styles";
 
+import { CLAY } from "./clay";
+
 // =====================================================================
 // BRAND COLORS — the main place to change the app's look.
 // Pick the active brand with ACTIVE_BRAND; delete the unused ones once
@@ -44,15 +46,15 @@ const BRANDS = {
     textSecondary: "#655370",
     divider: "rgba(39, 18, 48, 0.12)",
   },
-  // "Strawberry + Cacao" — pastel strawberry canvas, dark cacao-nib anchor,
-  // strawberry pink accent.
+  // "Strawberry + Cacao" — pastel strawberry canvas, dark cacao-nib ink,
+  // strawberry pink accent. Soft clay depth (not diner outlines).
   strawberryCacao: {
     primary: "#3B241A",
     primaryDark: "#26160F",
     primaryLight: "#5C3D2E",
     secondary: "#E24B7A",
     bg: "#FBDDE3",
-    paper: "#FFFFFF",
+    paper: "#FFFCF7",
     text: "#2E1B14",
     textSecondary: "#7A5A4C",
     divider: "rgba(46, 27, 20, 0.12)",
@@ -62,23 +64,27 @@ const BRANDS = {
 const ACTIVE_BRAND: keyof typeof BRANDS = "strawberryCacao";
 const brand = BRANDS[ACTIVE_BRAND];
 
-// =====================================================================
-// SCALES — radii / elevation / borders / fonts. Local to the theme; MUI's
-// theme is the token layer, so these feed component defaults below.
-// =====================================================================
-const radii = { base: 16, card: 20, pill: 999 };
-const elevation = {
-  card: "0 6px 20px rgba(40, 30, 45, 0.10)",
-  cardHover: "0 14px 30px rgba(40, 30, 45, 0.14)",
+const radii = {
+  base: CLAY.radius,
+  card: CLAY.radiusCard,
+  pill: 999,
+  chip: CLAY.radiusChip,
 };
-const inputBorderWidth = 2;
+const inputBorderWidth = 1.5;
 const fonts = {
   sans: "var(--font-sans), system-ui, -apple-system, Segoe UI, Arial, sans-serif",
   display: "var(--font-display), var(--font-sans), system-ui, sans-serif",
 };
 
+const ink = brand.primary;
+const soft = CLAY.shadow;
+const press = {
+  ...CLAY.press,
+  boxShadow: soft.sm(ink),
+};
+
 // =====================================================================
-// THEME — assembles the above into MUI. Components read from here.
+// THEME — soft clay: round shapes, diffuse shadows, quiet borders.
 // =====================================================================
 export const theme = createTheme({
   palette: {
@@ -87,11 +93,11 @@ export const theme = createTheme({
       main: brand.primary,
       light: brand.primaryLight,
       dark: brand.primaryDark,
-      contrastText: "#FFFFFF",
+      contrastText: "#FFFCF7",
     },
     secondary: {
       main: brand.secondary,
-      contrastText: "#FFFFFF",
+      contrastText: "#FFFCF7",
     },
     background: {
       default: brand.bg,
@@ -109,75 +115,231 @@ export const theme = createTheme({
   typography: {
     fontFamily: fonts.sans,
     fontWeightBold: 800,
-    h1: { fontFamily: fonts.display, fontWeight: 700, letterSpacing: "-0.01em" },
-    h2: { fontFamily: fonts.display, fontWeight: 700, letterSpacing: "-0.01em" },
-    h3: { fontFamily: fonts.display, fontWeight: 700, letterSpacing: "-0.01em" },
+    h1: {
+      fontFamily: fonts.display,
+      fontWeight: 700,
+      letterSpacing: "-0.01em",
+    },
+    h2: {
+      fontFamily: fonts.display,
+      fontWeight: 700,
+      letterSpacing: "-0.01em",
+    },
+    h3: {
+      fontFamily: fonts.display,
+      fontWeight: 700,
+      letterSpacing: "-0.01em",
+    },
     h4: { fontFamily: fonts.display, fontWeight: 700 },
     h5: { fontFamily: fonts.display, fontWeight: 700 },
     h6: { fontFamily: fonts.display, fontWeight: 700 },
-    button: { textTransform: "none", fontWeight: 700 },
+    button: {
+      textTransform: "none",
+      fontWeight: 800,
+      letterSpacing: "0.02em",
+    },
   },
   components: {
-    // Buttons: pill-shaped, comfortable tap size (mobile-first).
     MuiButton: {
       defaultProps: { disableElevation: true, size: "large" },
       styleOverrides: {
-        root: { borderRadius: radii.pill, paddingInline: 22 },
+        root: {
+          borderRadius: radii.base,
+          paddingInline: 22,
+          transition:
+            "transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease",
+          // MUI v9 dropped composite class keys (containedPrimary etc.) —
+          // color-specific styling now goes through the variants API.
+          variants: [
+            {
+              props: { variant: "contained", color: "primary" },
+              style: {
+                boxShadow: soft.md(ink),
+                "&:hover": {
+                  boxShadow: soft.lg(ink),
+                  backgroundColor: brand.primaryLight,
+                },
+                "&:active": press,
+              },
+            },
+            {
+              props: { variant: "contained", color: "secondary" },
+              style: {
+                boxShadow: soft.md(ink),
+                "&:hover": {
+                  boxShadow: soft.lg(ink),
+                },
+                "&:active": press,
+              },
+            },
+          ],
+        },
+        outlined: {
+          borderWidth: inputBorderWidth,
+          borderColor: alpha(ink, 0.2),
+          color: ink,
+          backgroundColor: brand.paper,
+          boxShadow: soft.sm(ink),
+          "&:hover": {
+            borderWidth: inputBorderWidth,
+            borderColor: alpha(ink, 0.35),
+            backgroundColor: alpha(ink, 0.04),
+            boxShadow: soft.md(ink),
+          },
+          "&:active": press,
+        },
+        text: {
+          color: ink,
+          "&:hover": {
+            backgroundColor: alpha(ink, 0.06),
+          },
+        },
       },
     },
     MuiFab: {
       styleOverrides: {
-        root: { borderRadius: radii.pill },
-        extended: { textTransform: "none", fontWeight: 700, paddingInline: 20 },
+        root: {
+          borderRadius: radii.pill,
+          boxShadow: soft.lg(ink),
+          fontWeight: 800,
+          "&:hover": {
+            boxShadow: soft.lg(ink),
+          },
+          "&:active": press,
+        },
+        extended: {
+          textTransform: "none",
+          fontWeight: 800,
+          letterSpacing: "0.02em",
+          paddingInline: 20,
+        },
+        primary: {
+          backgroundColor: CLAY.lemon.bg,
+          color: CLAY.lemon.fg,
+          "&:hover": {
+            backgroundColor: CLAY.lemon.bgHover,
+          },
+        },
       },
     },
     MuiChip: {
       styleOverrides: {
-        root: { borderRadius: radii.pill, fontWeight: 600 },
+        root: {
+          borderRadius: radii.chip,
+          fontWeight: 700,
+          border: `1px solid ${alpha(ink, 0.12)}`,
+        },
       },
     },
-    // Inputs: bold, on-brand outline (esp. the search field).
     MuiTextField: {
       defaultProps: { size: "medium" },
     },
     MuiOutlinedInput: {
       styleOverrides: {
         root: ({ theme: t }) => ({
+          // Flat paper + clear stroke — borders beat shadows for field affordance.
+          backgroundColor: t.palette.background.paper,
+          borderRadius: radii.base,
           "& .MuiOutlinedInput-notchedOutline": {
             borderWidth: inputBorderWidth,
-            borderColor: alpha(t.palette.primary.main, 0.35),
+            borderColor: alpha(t.palette.primary.main, 0.28),
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: t.palette.primary.main,
+            borderColor: alpha(t.palette.primary.main, 0.45),
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderWidth: inputBorderWidth,
+            borderWidth: 2,
+            borderColor: t.palette.secondary.main,
           },
         }),
       },
     },
-    // Cards: rounded, soft shadow, hover-lift (so components stay presentational).
     MuiCard: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
           borderRadius: radii.card,
-          border: `1px solid ${brand.divider}`,
-          boxShadow: elevation.card,
+          border: `1px solid ${alpha(ink, 0.08)}`,
+          backgroundColor: brand.paper,
+          boxShadow: soft.md(ink),
           transition: "transform 0.15s ease, box-shadow 0.15s ease",
           "&:hover": {
-            transform: "translateY(-3px)",
-            boxShadow: elevation.cardHover,
+            transform: "translateY(-2px)",
+            boxShadow: soft.lg(ink),
           },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+        },
+        elevation3: {
+          border: `1px solid ${alpha(ink, 0.08)}`,
+          boxShadow: soft.md(ink),
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: brand.bg,
+          backgroundColor: alpha(brand.paper, 0.92),
           color: brand.text,
           backgroundImage: "none",
+          backdropFilter: "blur(10px)",
+          borderBottom: `1px solid ${alpha(ink, 0.08)}`,
+          boxShadow: soft.sm(ink),
+        },
+      },
+    },
+    MuiBottomNavigation: {
+      styleOverrides: {
+        root: {
+          backgroundColor: brand.paper,
+        },
+      },
+    },
+    MuiBottomNavigationAction: {
+      styleOverrides: {
+        root: {
+          "&.Mui-selected": {
+            color: brand.secondary,
+          },
+        },
+        label: {
+          fontWeight: 700,
+          fontSize: "0.7rem",
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: radii.base,
+          border: `1px solid ${alpha(ink, 0.1)}`,
+          boxShadow: soft.sm(ink),
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: radii.base,
+          "&:hover": {
+            backgroundColor: alpha(ink, 0.08),
+          },
+        },
+      },
+    },
+    MuiSnackbarContent: {
+      styleOverrides: {
+        root: {
+          backgroundColor: ink,
+          color: brand.paper,
+          borderRadius: radii.base,
+          boxShadow: soft.md(ink),
+          fontWeight: 700,
         },
       },
     },

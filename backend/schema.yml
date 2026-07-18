@@ -6,8 +6,8 @@ info:
 paths:
   /api/me/:
     get:
-      operationId: me_list
-      description: Endpoints for the currently authenticated user.
+      operationId: me_retrieve
+      description: The currently authenticated user (single object, not a list).
       tags:
       - me
       security:
@@ -17,27 +17,25 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserMe'
+                $ref: '#/components/schemas/UserMe'
           description: ''
   /api/me/profile/:
     patch:
-      operationId: me_profile_partial_update
-      description: Endpoints for the currently authenticated user.
+      operationId: me_profile_update
+      description: Partial profile updates for the currently authenticated user.
       tags:
       - me
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedUserMe'
+              $ref: '#/components/schemas/PatchedUserMeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedUserMe'
+              $ref: '#/components/schemas/PatchedUserMeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedUserMe'
+              $ref: '#/components/schemas/PatchedUserMeRequest'
       security:
       - cookieAuth: []
       responses:
@@ -89,13 +87,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
         required: true
       security:
       - cookieAuth: []
@@ -141,13 +139,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RecipeWrite'
+              $ref: '#/components/schemas/RecipeWriteRequest'
         required: true
       security:
       - cookieAuth: []
@@ -172,13 +170,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedRecipeWrite'
+              $ref: '#/components/schemas/PatchedRecipeWriteRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedRecipeWrite'
+              $ref: '#/components/schemas/PatchedRecipeWriteRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedRecipeWrite'
+              $ref: '#/components/schemas/PatchedRecipeWriteRequest'
       security:
       - cookieAuth: []
       responses:
@@ -203,6 +201,73 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/recipes/parse-ingredients/:
+    post:
+      operationId: recipes_parse_ingredients
+      description: Free-form text -> draft structured ingredients. Non-mutating.
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseIngredientsRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ParseIngredientsRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ParseIngredientsRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseIngredientsResponse'
+          description: ''
+  /api/tags/:
+    get:
+      operationId: tags_list
+      description: Shared dietary/style labels for pickers and filters.
+      tags:
+      - tags
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/tags/{slug}/:
+    get:
+      operationId: tags_retrieve
+      description: Shared dietary/style labels for pickers and filters.
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - tags
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
   /api/users/{username}/:
     get:
       operationId: users_retrieve
@@ -255,14 +320,59 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecipeList'
-    PatchedRecipeWrite:
+    ParseIngredientsRequestRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+      required:
+      - text
+    ParseIngredientsResponse:
+      type: object
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParsedIngredient'
+        warnings:
+          type: array
+          items:
+            type: string
+      required:
+      - ingredients
+      - warnings
+    ParsedIngredient:
+      type: object
+      properties:
+        section:
+          $ref: '#/components/schemas/SectionEnum'
+        name:
+          type: string
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        unit:
+          type: string
+        sort_order:
+          type: integer
+      required:
+      - name
+      - quantity
+      - section
+      - sort_order
+      - unit
+    PatchedRecipeWriteRequest:
       type: object
       description: Input DTO for create/update — nested ingredients on write.
       properties:
         title:
           type: string
+          minLength: 1
           maxLength: 200
-        instructions:
+        special_prep:
           type: string
         program:
           oneOf:
@@ -271,36 +381,26 @@ components:
         ingredients:
           type: array
           items:
-            $ref: '#/components/schemas/RecipeIngredientWrite'
+            $ref: '#/components/schemas/RecipeIngredientWriteRequest'
+        ingredients_text:
+          type: string
         tag_slugs:
           type: array
           items:
             type: string
+            minLength: 1
         is_published:
           type: boolean
-    PatchedUserMe:
+    PatchedUserMeRequest:
       type: object
       description: Current authenticated user — used by the FE for global session
         context.
       properties:
-        id:
-          type: integer
-          readOnly: true
-        username:
-          type: string
-          readOnly: true
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-        email:
-          type: string
-          format: email
-          readOnly: true
-          title: Email address
         bio:
           type: string
         avatar:
           type: string
-          format: uri
+          format: binary
           nullable: true
     ProgramEnum:
       enum:
@@ -358,7 +458,7 @@ components:
           type: string
           format: date-time
           readOnly: true
-        instructions:
+        special_prep:
           type: string
         ingredients:
           type: array
@@ -376,13 +476,14 @@ components:
           type: string
           format: date-time
           readOnly: true
+        ingredients_text:
+          type: string
       required:
       - created_at
       - created_by
       - id
       - images
       - ingredients
-      - instructions
       - program
       - program_display
       - slug
@@ -459,6 +560,32 @@ components:
           minimum: 0
       required:
       - name
+    RecipeIngredientWriteRequest:
+      type: object
+      properties:
+        section:
+          $ref: '#/components/schemas/SectionEnum'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        unit:
+          type: string
+          maxLength: 50
+        prep_note:
+          type: string
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - name
     RecipeList:
       type: object
       description: Lightweight DTO for feeds and search results.
@@ -509,7 +636,11 @@ components:
         title:
           type: string
           maxLength: 200
-        instructions:
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        special_prep:
           type: string
         program:
           oneOf:
@@ -519,6 +650,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecipeIngredientWrite'
+        ingredients_text:
+          type: string
         tag_slugs:
           type: array
           items:
@@ -527,7 +660,37 @@ components:
           type: boolean
       required:
       - ingredients
-      - instructions
+      - slug
+      - title
+    RecipeWriteRequest:
+      type: object
+      description: Input DTO for create/update — nested ingredients on write.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        special_prep:
+          type: string
+        program:
+          oneOf:
+          - $ref: '#/components/schemas/ProgramEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientWriteRequest'
+        ingredients_text:
+          type: string
+        tag_slugs:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        is_published:
+          type: boolean
+      required:
+      - ingredients
       - title
     SectionEnum:
       enum:

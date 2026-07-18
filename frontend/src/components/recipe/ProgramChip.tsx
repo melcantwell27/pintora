@@ -15,6 +15,7 @@ export function ProgramChip({ label }: { label: string }) {
         bgcolor: accent.bg,
         color: accent.fg,
         fontWeight: 700,
+        borderColor: accent.fg,
         "& .MuiChip-icon": { color: accent.fg },
       }}
     />

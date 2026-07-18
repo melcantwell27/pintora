@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, permissions, viewsets
-from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import User
 from .serializers import UserMeSerializer, UserPublicSerializer
@@ -17,20 +17,28 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     lookup_url_kwarg = "username"
 
 
-class MeViewSet(viewsets.ViewSet):
-    """Endpoints for the currently authenticated user."""
+class MeView(APIView):
+    """The currently authenticated user (single object, not a list)."""
 
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = UserMeSerializer
 
-    @extend_schema(responses=UserMeSerializer)
-    def list(self, request):
+    @extend_schema(responses=UserMeSerializer, operation_id="me_retrieve")
+    def get(self, request):
         serializer = UserMeSerializer(request.user)
         return Response(serializer.data)
 
-    @extend_schema(request=UserMeSerializer, responses=UserMeSerializer)
-    @action(detail=False, methods=["patch"], url_path="profile")
-    def update_profile(self, request):
+
+class MeProfileView(APIView):
+    """Partial profile updates for the currently authenticated user."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        request=UserMeSerializer,
+        responses=UserMeSerializer,
+        operation_id="me_profile_update",
+    )
+    def patch(self, request):
         serializer = UserMeSerializer(
             request.user,
             data=request.data,

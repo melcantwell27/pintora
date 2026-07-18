@@ -1,0 +1,105 @@
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { api } from "@/test/msw/handlers";
+import { server } from "@/test/msw/server";
+import { renderWithProviders } from "@/test/test-utils";
+
+import { LoginView } from "./LoginView";
+
+const { pushMock, searchParamsRef } = vi.hoisted(() => ({
+  pushMock: vi.fn(),
+  searchParamsRef: { current: new URLSearchParams() },
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => searchParamsRef.current,
+}));
+
+async function fillAndSubmit(email: string, password: string) {
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText(/email/i), email);
+  await user.type(screen.getByLabelText(/password/i), password);
+  await user.click(screen.getByRole("button", { name: /log in/i }));
+}
+
+describe("LoginView", () => {
+  beforeEach(() => {
+    pushMock.mockClear();
+    searchParamsRef.current = new URLSearchParams();
+  });
+
+  it("logs in and redirects home", async () => {
+    let requestBody: unknown;
+    server.use(
+      http.post(api("/_allauth/browser/v1/auth/login"), async ({ request }) => {
+        requestBody = await request.json();
+        return HttpResponse.json({ status: 200 });
+      }),
+    );
+
+    renderWithProviders(<LoginView />);
+    await fillAndSubmit("mel@example.com", "hunter2secure");
+
+    await vi.waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
+    expect(requestBody).toEqual({
+      email: "mel@example.com",
+      password: "hunter2secure",
+    });
+  });
+
+  it("honors a safe ?next= path after login", async () => {
+    searchParamsRef.current = new URLSearchParams("next=/create");
+
+    renderWithProviders(<LoginView />);
+    await fillAndSubmit("mel@example.com", "hunter2secure");
+
+    await vi.waitFor(() => expect(pushMock).toHaveBeenCalledWith("/create"));
+  });
+
+  it("ignores an absolute-URL ?next= (open redirect guard)", async () => {
+    searchParamsRef.current = new URLSearchParams(
+      "next=https://evil.example.com",
+    );
+
+    renderWithProviders(<LoginView />);
+    await fillAndSubmit("mel@example.com", "hunter2secure");
+
+    await vi.waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
+  });
+
+  it("validates the email before hitting the network", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<LoginView />);
+
+    await user.type(screen.getByLabelText(/email/i), "not-an-email");
+    await user.type(screen.getByLabelText(/password/i), "hunter2secure");
+    await user.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(
+      await screen.findByText("Enter a valid email address."),
+    ).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("surfaces the API error message on bad credentials", async () => {
+    server.use(
+      http.post(api("/_allauth/browser/v1/auth/login"), () =>
+        HttpResponse.json(
+          { errors: [{ message: "Incorrect email or password." }] },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    renderWithProviders(<LoginView />);
+    await fillAndSubmit("mel@example.com", "wrong-password");
+
+    expect(
+      await screen.findByText("Incorrect email or password."),
+    ).toBeInTheDocument();
+  });
+});

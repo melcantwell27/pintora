@@ -5,6 +5,7 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
+import { memo } from "react";
 
 import { ProgramChip } from "@/components/recipe/ProgramChip";
 import { TagChip } from "@/components/recipe/TagChip";
@@ -12,23 +13,35 @@ import { ROUTES } from "@/constants";
 import { accentForKey } from "@/styles/accents";
 import type { RecipeListItem } from "@/types";
 
-export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
+/**
+ * memo: feed parents re-render per keystroke (SearchView) while the recipe
+ * references stay stable until fresh data lands — skip re-rendering cards.
+ */
+export const RecipeCard = memo(function RecipeCard({
+  recipe,
+}: {
+  recipe: RecipeListItem;
+}) {
   const accent = accentForKey(recipe.created_by.username);
   const initial = recipe.created_by.username.charAt(0).toUpperCase();
 
   return (
     <Card>
       <CardActionArea component={Link} href={ROUTES.recipe(recipe.slug)}>
-        <CardContent sx={{ p: 2.5 }}>
+        <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
           <Typography
             variant="h6"
             component="h2"
-            sx={{ fontWeight: 700, lineHeight: 1.2, mb: 1.25 }}
+            sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0.75 }}
           >
             {recipe.title}
           </Typography>
 
-          <Stack direction="row" spacing={1} sx={{ mb: 1.75, alignItems: "center" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mb: 1, alignItems: "center" }}
+          >
             <Avatar
               sx={{
                 width: 26,
@@ -37,6 +50,8 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
                 fontWeight: 800,
                 bgcolor: accent.bg,
                 color: accent.fg,
+                border: "2px solid",
+                borderColor: accent.fg,
               }}
             >
               {initial}
@@ -46,7 +61,12 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
             </Typography>
           </Stack>
 
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: "wrap" }}
+          >
             <ProgramChip label={recipe.program_display} />
             {recipe.tags.map((tag) => (
               <TagChip key={tag.slug} label={tag.label} />
@@ -56,4 +76,4 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
       </CardActionArea>
     </Card>
   );
-}
+});

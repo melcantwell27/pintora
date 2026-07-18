@@ -9,13 +9,15 @@ import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import Paper from "@mui/material/Paper";
 import { usePathname, useRouter } from "next/navigation";
 
+import { CLAY } from "@/styles/clay";
 import { ROUTES } from "@/constants";
-import { useSessionStore } from "@/store/useSessionStore";
+import { useSession } from "@/hooks/useSession";
 
 export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const isAuthenticated = useSessionStore((s) => s.isAuthenticated);
+  const { data: user } = useSession();
+  const isAuthenticated = Boolean(user);
 
   // The last tab reflects auth state: "Profile" when signed in, otherwise a
   // "Sign in" shortcut to the login page.
@@ -38,16 +40,19 @@ export function BottomNav() {
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         position: "fixed",
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 1100,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderRadius: `${CLAY.radiusCard}px ${CLAY.radiusCard}px 0 0`,
         overflow: "hidden",
+        bgcolor: "background.paper",
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        borderBottom: "none",
+        boxShadow: (theme) => CLAY.shadow.lg(theme.palette.primary.main),
       }}
     >
       <BottomNavigation

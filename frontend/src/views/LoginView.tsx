@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,38 +11,54 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
 
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ROUTES } from "@/constants";
-import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { AuthError, login } from "@/lib/api/authClient";
+import { sessionKeys } from "@/lib/queryKeys";
+import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 
 export function LoginView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  // Only same-origin paths — never redirect to an absolute URL from a param.
+  const nextParam = searchParams.get("next");
+  const nextPath =
+    nextParam?.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : ROUTES.home;
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
+  const onSubmit = handleSubmit(async ({ email, password }) => {
     try {
       await login(email, password);
-      await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
-      router.push(ROUTES.home);
+      await queryClient.invalidateQueries({ queryKey: sessionKeys.me() });
+      router.push(nextPath);
+      // Re-render server components with the new session cookie — the RQ
+      // cache update alone doesn't refresh dehydrated server output.
+      router.refresh();
     } catch (err) {
-      setError(
-        err instanceof AuthError ? err.message : "Something went wrong.",
-      );
-      setSubmitting(false);
+      setError("root.serverError", {
+        message:
+          err instanceof AuthError ? err.message : "Something went wrong.",
+      });
     }
-  };
+  });
+
+  const { ref: emailRef, ...emailProps } = register("email");
+  const { ref: passwordRef, ...passwordProps } = register("password");
 
   return (
     <Box sx={{ maxWidth: 400, mx: "auto", py: 4 }}>
@@ -55,35 +72,39 @@ export function LoginView() {
         </Typography>
       </Stack>
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} noValidate>
         <Stack spacing={2}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {errors.root?.serverError && (
+            <Alert severity="error">{errors.root.serverError.message}</Alert>
+          )}
           <TextField
             label="Email"
             type="email"
             autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            {...emailProps}
+            inputRef={emailRef}
+            error={Boolean(errors.email)}
+            helperText={errors.email?.message}
             fullWidth
           />
           <TextField
             label="Password"
             type="password"
             autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            {...passwordProps}
+            inputRef={passwordRef}
+            error={Boolean(errors.password)}
+            helperText={errors.password?.message}
             fullWidth
           />
           <Button
             type="submit"
             variant="contained"
             size="large"
-            disabled={submitting}
+            disabled={isSubmitting}
             fullWidth
           >
-            {submitting ? "Logging in…" : "Log in"}
+            {isSubmitting ? "Logging in…" : "Log in"}
           </Button>
         </Stack>
       </form>
@@ -93,7 +114,11 @@ export function LoginView() {
 
       <Typography sx={{ mt: 3, textAlign: "center" }} color="text.secondary">
         New here?{" "}
-        <Link component={NextLink} href={ROUTES.signup} sx={{ fontWeight: 700 }}>
+        <Link
+          component={NextLink}
+          href={ROUTES.signup}
+          sx={{ fontWeight: 700 }}
+        >
           Create an account
         </Link>
       </Typography>

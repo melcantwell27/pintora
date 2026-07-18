@@ -4,11 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { recipeKeys } from "@/lib/queryKeys";
 
-export type RecipeWriteInput = components["schemas"]["RecipeWrite"];
-export type RecipeWriteResult = components["schemas"]["RecipeWrite"] & {
-  slug?: string;
-};
+export type RecipeWriteInput = components["schemas"]["RecipeWriteRequest"];
+export type RecipeWriteResult = components["schemas"]["RecipeWrite"];
 
 export function useCreateRecipe() {
   const queryClient = useQueryClient();
@@ -18,13 +17,13 @@ export function useCreateRecipe() {
       const { data, error, response } = await apiClient.POST("/api/recipes/", {
         body,
       });
-      if (error || !response.ok) {
+      if (error || !response.ok || !data) {
         throw new Error("Failed to publish recipe");
       }
-      return data as RecipeWriteResult;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists });
     },
   });
 }

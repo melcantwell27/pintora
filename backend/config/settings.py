@@ -221,4 +221,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Share and discover Ninja Creami recipes.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Emit separate *Request components without readOnly fields so generated
+    # frontend request types don't demand server-computed fields (e.g. slug).
+    "COMPONENT_SPLIT_REQUEST": True,
 }

@@ -11,8 +11,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Endpoints for the currently authenticated user. */
-        get: operations["me_list"];
+        /** @description The currently authenticated user (single object, not a list). */
+        get: operations["me_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -34,8 +34,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Endpoints for the currently authenticated user. */
-        patch: operations["me_profile_partial_update"];
+        /** @description Partial profile updates for the currently authenticated user. */
+        patch: operations["me_profile_update"];
         trace?: never;
     };
     "/api/recipes/": {
@@ -68,6 +68,57 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["recipes_partial_update"];
+        trace?: never;
+    };
+    "/api/recipes/parse-ingredients/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Free-form text -> draft structured ingredients. Non-mutating. */
+        post: operations["recipes_parse_ingredients"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tags/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Shared dietary/style labels for pickers and filters. */
+        get: operations["tags_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tags/{slug}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Shared dietary/style labels for pickers and filters. */
+        get: operations["tags_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/users/{username}/": {
@@ -108,27 +159,35 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["RecipeList"][];
         };
+        ParseIngredientsRequestRequest: {
+            text: string;
+        };
+        ParseIngredientsResponse: {
+            ingredients: components["schemas"]["ParsedIngredient"][];
+            warnings: string[];
+        };
+        ParsedIngredient: {
+            section: components["schemas"]["SectionEnum"];
+            name: string;
+            /** Format: decimal */
+            quantity: string | null;
+            unit: string;
+            sort_order: number;
+        };
         /** @description Input DTO for create/update — nested ingredients on write. */
-        PatchedRecipeWrite: {
+        PatchedRecipeWriteRequest: {
             title?: string;
-            instructions?: string;
+            special_prep?: string;
             program?: components["schemas"]["ProgramEnum"] | components["schemas"]["BlankEnum"];
-            ingredients?: components["schemas"]["RecipeIngredientWrite"][];
+            ingredients?: components["schemas"]["RecipeIngredientWriteRequest"][];
+            ingredients_text?: string;
             tag_slugs?: string[];
             is_published?: boolean;
         };
         /** @description Current authenticated user — used by the FE for global session context. */
-        PatchedUserMe: {
-            readonly id?: number;
-            /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
-            readonly username?: string;
-            /**
-             * Email address
-             * Format: email
-             */
-            readonly email?: string;
+        PatchedUserMeRequest: {
             bio?: string;
-            /** Format: uri */
+            /** Format: binary */
             avatar?: string | null;
         };
         /**
@@ -155,12 +214,13 @@ export interface components {
             readonly tags: components["schemas"]["Tag"][];
             /** Format: date-time */
             readonly created_at: string;
-            instructions: string;
+            special_prep?: string;
             readonly ingredients: components["schemas"]["RecipeIngredient"][];
             readonly images: components["schemas"]["RecipeImage"][];
             is_published?: boolean;
             /** Format: date-time */
             readonly updated_at: string;
+            ingredients_text?: string;
         };
         RecipeImage: {
             readonly id: number;
@@ -187,6 +247,15 @@ export interface components {
             prep_note?: string;
             sort_order?: number;
         };
+        RecipeIngredientWriteRequest: {
+            section?: components["schemas"]["SectionEnum"];
+            name: string;
+            /** Format: decimal */
+            quantity?: string | null;
+            unit?: string;
+            prep_note?: string;
+            sort_order?: number;
+        };
         /** @description Lightweight DTO for feeds and search results. */
         RecipeList: {
             readonly id: number;
@@ -202,9 +271,21 @@ export interface components {
         /** @description Input DTO for create/update — nested ingredients on write. */
         RecipeWrite: {
             title: string;
-            instructions: string;
+            readonly slug: string;
+            special_prep?: string;
             program?: components["schemas"]["ProgramEnum"] | components["schemas"]["BlankEnum"];
             ingredients: components["schemas"]["RecipeIngredientWrite"][];
+            ingredients_text?: string;
+            tag_slugs?: string[];
+            is_published?: boolean;
+        };
+        /** @description Input DTO for create/update — nested ingredients on write. */
+        RecipeWriteRequest: {
+            title: string;
+            special_prep?: string;
+            program?: components["schemas"]["ProgramEnum"] | components["schemas"]["BlankEnum"];
+            ingredients: components["schemas"]["RecipeIngredientWriteRequest"][];
+            ingredients_text?: string;
             tag_slugs?: string[];
             is_published?: boolean;
         };
@@ -250,7 +331,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    me_list: {
+    me_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -264,12 +345,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserMe"][];
+                    "application/json": components["schemas"]["UserMe"];
                 };
             };
         };
     };
-    me_profile_partial_update: {
+    me_profile_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -278,9 +359,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedUserMe"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedUserMe"];
-                "multipart/form-data": components["schemas"]["PatchedUserMe"];
+                "application/json": components["schemas"]["PatchedUserMeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedUserMeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedUserMeRequest"];
             };
         };
         responses: {
@@ -329,9 +410,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecipeWrite"];
-                "application/x-www-form-urlencoded": components["schemas"]["RecipeWrite"];
-                "multipart/form-data": components["schemas"]["RecipeWrite"];
+                "application/json": components["schemas"]["RecipeWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecipeWriteRequest"];
+                "multipart/form-data": components["schemas"]["RecipeWriteRequest"];
             };
         };
         responses: {
@@ -377,9 +458,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecipeWrite"];
-                "application/x-www-form-urlencoded": components["schemas"]["RecipeWrite"];
-                "multipart/form-data": components["schemas"]["RecipeWrite"];
+                "application/json": components["schemas"]["RecipeWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecipeWriteRequest"];
+                "multipart/form-data": components["schemas"]["RecipeWriteRequest"];
             };
         };
         responses: {
@@ -424,9 +505,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedRecipeWrite"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedRecipeWrite"];
-                "multipart/form-data": components["schemas"]["PatchedRecipeWrite"];
+                "application/json": components["schemas"]["PatchedRecipeWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRecipeWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRecipeWriteRequest"];
             };
         };
         responses: {
@@ -436,6 +517,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecipeWrite"];
+                };
+            };
+        };
+    };
+    recipes_parse_ingredients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParseIngredientsRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ParseIngredientsRequestRequest"];
+                "multipart/form-data": components["schemas"]["ParseIngredientsRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParseIngredientsResponse"];
+                };
+            };
+        };
+    };
+    tags_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"][];
+                };
+            };
+        };
+    };
+    tags_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
                 };
             };
         };

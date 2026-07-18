@@ -25,7 +25,7 @@ RECIPES = [
     {
         "title": "Almond Vanilla Protein Ice Cream",
         "program": Recipe.Program.LITE_ICE_CREAM,
-        "instructions": (
+        "special_prep": (
             "Blend base until smooth. Freeze 24h. Spin on Lite Ice Cream. "
             "Add mix-ins, re-spin."
         ),
@@ -40,7 +40,7 @@ RECIPES = [
     {
         "title": "Chocolate Peanut Butter Greek Yogurt",
         "program": Recipe.Program.LITE_ICE_CREAM,
-        "instructions": (
+        "special_prep": (
             "Whisk base smooth. Freeze 24h. Spin on Lite Ice Cream. "
             "Add peanut butter cups, re-spin."
         ),
@@ -55,7 +55,7 @@ RECIPES = [
     {
         "title": "Strawberry Sorbet",
         "program": Recipe.Program.SORBET,
-        "instructions": "Blend all. Freeze 24h. Spin on Sorbet. Re-spin if crumbly.",
+        "special_prep": "Blend all. Freeze 24h. Spin on Sorbet. Re-spin if crumbly.",
         "tags": ["vegan", "fruity"],
         "ingredients": [
             ("base", "frozen strawberries", "2", "cup", ""),
@@ -66,7 +66,7 @@ RECIPES = [
     {
         "title": "Cookies & Cream Dream",
         "program": Recipe.Program.ICE_CREAM,
-        "instructions": (
+        "special_prep": (
             "Blend base. Freeze 24h. Spin on Ice Cream. Add crushed cookies, re-spin."
         ),
         "tags": ["chocolate"],
@@ -117,7 +117,7 @@ class Command(BaseCommand):
             recipe = Recipe.objects.create(
                 created_by=user,
                 title=data["title"],
-                instructions=data["instructions"],
+                special_prep=data["special_prep"],
                 program=data["program"],
             )
             recipe.tags.set([tag_objs[s] for s in data["tags"]])

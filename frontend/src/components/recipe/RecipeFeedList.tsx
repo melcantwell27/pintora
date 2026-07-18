@@ -21,16 +21,20 @@ export function RecipeFeedList({
 }: RecipeFeedListProps) {
   if (isLoading) {
     return (
-      <Stack spacing={2}>
+      <Stack spacing={1.5}>
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} variant="rounded" height={120} />
+          <Skeleton key={i} variant="rounded" height={96} />
         ))}
       </Stack>
     );
   }
 
   if (isError) {
-    return <Alert severity="error">Couldn&apos;t load recipes. Is the API running?</Alert>;
+    return (
+      <Alert severity="error">
+        Couldn&apos;t load recipes. Is the API running?
+      </Alert>
+    );
   }
 
   if (!recipes || recipes.length === 0) {
@@ -42,7 +46,7 @@ export function RecipeFeedList({
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       {recipes.map((recipe) => (
         <RecipeCard key={recipe.id} recipe={recipe} />
       ))}
